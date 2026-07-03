@@ -62,7 +62,6 @@ flowchart TD
   - final example execution accuracy
   - first-turn candidate execution accuracy
   - candidate execution accuracy
-  - syntax error rate
   - executable rate
   - schema valid rate
   - repair success rate
@@ -135,7 +134,7 @@ bash experiments/05_eval_dpo_repair.sh
 bash experiments/06_compare.sh
 ```
 
-Small, resume-friendly artifacts can be copied into `outputs_key/`, while large trajectories, adapters, and raw rollouts should stay in `outputs/` or external storage.
+Small artifacts can be copied into `outputs_key/`, while large trajectories, adapters, and raw rollouts should stay in `outputs/` or external storage.
 
 ## Day 1: Baseline Evaluation
 
@@ -153,7 +152,7 @@ python3 text2sql_trajectory_builder.py \
   --top_k_tables 6
 ```
 
-Use `summary.json` for execution accuracy and syntax error rate.
+Use `summary.json` for execution accuracy, repair success, and executable rate.
 
 Schema retrieval ablations:
 
@@ -467,21 +466,21 @@ Basic Repair uses SQLite error/result-status feedback. CM Repair adds column-awa
 
 The following Spider dev 200 results were used during development to compare feedback variants.
 
-| Run | First-turn EX | Final EX | Repair SR | Executable | Syntax error |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Base-Repair | 49.50% | 53.00% | 6.93% | 58.73% | 0.00% |
-| BalancedDPO-Basic | 51.00% | 56.00% | 10.20% | 58.55% | 0.00% |
-| BalancedDPO-Column | 51.00% | 55.50% | 9.18% | 62.27% | 0.00% |
-| BalancedDPO + CM Repair | 51.00% | 58.50% | 15.31% | 64.32% | 0.00% |
+| Run | First-turn EX | Final EX | Repair SR | Executable |
+| --- | ---: | ---: | ---: | ---: |
+| Base-Repair | 49.50% | 53.00% | 6.93% | 58.73% |
+| BalancedDPO-Basic | 51.00% | 56.00% | 10.20% | 58.55% |
+| BalancedDPO-Column | 51.00% | 55.50% | 9.18% | 62.27% |
+| BalancedDPO + CM Repair | 51.00% | 58.50% | 15.31% | 64.32% |
 
 ### Early SFT / DPO / SFT+DPO Ablation
 
-| Run | First-turn EX | Final EX | Repair SR | Executable | Syntax error |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Base-Repair | 49.50% | 53.00% | 6.93% | 58.73% | 0.00% |
-| BalancedDPO + CM Repair | 51.00% | 58.50% | 15.31% | 64.32% | 0.00% |
-| SFT + CM Repair | 45.00% | 56.00% | 20.00% | 59.41% | 0.00% |
-| SFT+DPO + CM Repair | 46.50% | 56.00% | 17.76% | 61.90% | 0.00% |
+| Run | First-turn EX | Final EX | Repair SR | Executable |
+| --- | ---: | ---: | ---: | ---: |
+| Base-Repair | 49.50% | 53.00% | 6.93% | 58.73% |
+| BalancedDPO + CM Repair | 51.00% | 58.50% | 15.31% | 64.32% |
+| SFT + CM Repair | 45.00% | 56.00% | 20.00% | 59.41% |
+| SFT+DPO + CM Repair | 46.50% | 56.00% | 17.76% | 61.90% |
 
 This early Spider 200 ablation was used for rapid iteration. In the final train1000 -> dev full clean-split setting, the cleaner SFT data and completion-only training no longer show the same first-turn regression; SFT+DPO achieves the best first-turn and final execution accuracy.
 
