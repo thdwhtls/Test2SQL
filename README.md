@@ -349,18 +349,20 @@ Main evaluation uses Qwen2.5-Coder-3B-Instruct with greedy decoding. Preference 
 
 ### Clean-Split Main Results
 
-| Run | First-turn EX | Final EX | Repair SR | Schema alignment proxy | Executable |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Base-OneShot | 57.56% | 57.56% | / | 84.01% | 83.43% |
-| Base + CM Repair | 57.56% | 68.90% | 26.71% | 81.64% | 81.20% |
-| SFT-OneShot | 61.92% | 61.92% | / | 82.72% | 82.54% |
-| SFT + CM Repair | 61.92% | 71.41% | 24.94% | 82.72% | 82.54% |
-| DPO-OneShot | 62.11% | 62.11% | / | 82.37% | 82.02% |
-| DPO + CM Repair | 62.11% | 71.80% | 25.58% | 82.37% | 82.02% |
-| SFT+DPO-OneShot | 67.25% | 67.25% | / | 84.94% | 84.45% |
-| SFT+DPO + CM Repair | 67.25% | 73.55% | 19.23% | 84.94% | 84.45% |
+| Run | First-turn EX | Final EX | Repair SR | Executable |
+| --- | ---: | ---: | ---: | ---: |
+| Base-OneShot | 57.56% | 57.56% | / | 83.43% |
+| Base + CM Repair | 57.56% | 68.90% | 26.71% | 81.20% |
+| SFT-OneShot | 61.92% | 61.92% | / | 82.54% |
+| SFT + CM Repair | 61.92% | 71.41% | 24.94% | 82.54% |
+| DPO-OneShot | 62.11% | 62.11% | / | 82.02% |
+| DPO + CM Repair | 62.11% | 71.80% | 25.58% | 82.02% |
+| SFT+DPO-OneShot | 67.25% | 67.25% | / | 84.45% |
+| SFT+DPO + CM Repair | 67.25% | 73.55% | 19.23% | 84.45% |
 
 SFT and DPO both improve first-turn SQL generation over the base model, while CM Repair adds verified-failure correction on top. SFT+DPO gives the best clean-split result, suggesting that supervised SQL imitation and execution-guided preference optimization are complementary in this setting. DPO rows use the final synthetic-ratio-controlled Synth20 preference set with 701 filtered pairs: 557 natural rollout pairs and 144 synthetic hard negatives.
+
+`Executable` is the percentage of generated SQL candidates that pass SQL parsing, schema checks, and SQLite execution without runtime errors. It measures execution stability, not whether the returned result matches the gold answer.
 
 ### Verified-Failure Setting
 
@@ -433,44 +435,42 @@ Verifier-aware routing separates executor-visible errors from guarded and extern
 
 Synthetic hard negatives are useful but affect the first-turn / repair trade-off. Reducing the synthetic fraction from 29.95% to 20.54% preserves most first-turn gains while improving repair success and final execution accuracy.
 
-| Run | First-turn EX | Final EX | Repair SR | Schema alignment proxy | Executable |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Base + CM Repair | 57.56% | 68.90% | 26.71% | 81.64% | 81.20% |
-| DPO1000-Synth30 | 63.08% | 71.12% | 21.78% | 82.61% | 82.32% |
-| DPO1000-Synth20 | 62.11% | 71.80% | 25.58% | 82.37% | 82.02% |
+| Run | First-turn EX | Final EX | Repair SR | Executable |
+| --- | ---: | ---: | ---: | ---: |
+| Base + CM Repair | 57.56% | 68.90% | 26.71% | 81.20% |
+| DPO1000-Synth30 | 63.08% | 71.12% | 21.78% | 82.32% |
+| DPO1000-Synth20 | 62.11% | 71.80% | 25.58% | 82.02% |
 
 ### SFT / DPO / SFT+DPO Method Ablation
 
 The final clean-split ablation shows that SFT and DPO are complementary in the current data setting. SFT improves the base SQL generation ability, while DPO further optimizes preference ranking over execution-verified SQL candidates.
 
-| Run | First-turn EX | Final EX | Repair SR | Schema alignment proxy | Executable |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Base + CM Repair | 57.56% | 68.90% | 26.71% | 81.64% | 81.20% |
-| SFT + CM Repair | 61.92% | 71.41% | 24.94% | 82.72% | 82.54% |
-| DPO + CM Repair | 62.11% | 71.80% | 25.58% | 82.37% | 82.02% |
-| SFT+DPO + CM Repair | 67.25% | 73.55% | 19.23% | 84.94% | 84.45% |
+| Run | First-turn EX | Final EX | Repair SR | Executable |
+| --- | ---: | ---: | ---: | ---: |
+| Base + CM Repair | 57.56% | 68.90% | 26.71% | 81.20% |
+| SFT + CM Repair | 61.92% | 71.41% | 24.94% | 82.54% |
+| DPO + CM Repair | 62.11% | 71.80% | 25.58% | 82.02% |
+| SFT+DPO + CM Repair | 67.25% | 73.55% | 19.23% | 84.45% |
 
 ### Feedback And DPO Ablation
 
 The following Spider dev 200 results were used during development to compare feedback variants.
 
-| Run | First-turn EX | Final EX | Repair SR | Schema alignment proxy | Executable | Syntax error |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Base-Repair | 49.50% | 53.00% | 6.93% | 58.99% | 58.73% | 0.00% |
-| BalancedDPO-Basic | 51.00% | 56.00% | 10.20% | 59.07% | 58.55% | 0.00% |
-| BalancedDPO-Column | 51.00% | 55.50% | 9.18% | 62.79% | 62.27% | 0.00% |
-| BalancedDPO + CM Repair | 51.00% | 58.50% | 15.31% | 64.84% | 64.32% | 0.00% |
-
-`schema_alignment_rate` is a schema-validity proxy in the current implementation: it measures whether generated SQL remains executable or free of schema-reference errors, not exact gold column/table overlap.
+| Run | First-turn EX | Final EX | Repair SR | Executable | Syntax error |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Base-Repair | 49.50% | 53.00% | 6.93% | 58.73% | 0.00% |
+| BalancedDPO-Basic | 51.00% | 56.00% | 10.20% | 58.55% | 0.00% |
+| BalancedDPO-Column | 51.00% | 55.50% | 9.18% | 62.27% | 0.00% |
+| BalancedDPO + CM Repair | 51.00% | 58.50% | 15.31% | 64.32% | 0.00% |
 
 ### Early SFT / DPO / SFT+DPO Ablation
 
-| Run | First-turn EX | Final EX | Repair SR | Schema alignment proxy | Executable | Syntax error |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Base-Repair | 49.50% | 53.00% | 6.93% | 58.99% | 58.73% | 0.00% |
-| BalancedDPO + CM Repair | 51.00% | 58.50% | 15.31% | 64.84% | 64.32% | 0.00% |
-| SFT + CM Repair | 45.00% | 56.00% | 20.00% | 59.65% | 59.41% | 0.00% |
-| SFT+DPO + CM Repair | 46.50% | 56.00% | 17.76% | 61.90% | 61.90% | 0.00% |
+| Run | First-turn EX | Final EX | Repair SR | Executable | Syntax error |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Base-Repair | 49.50% | 53.00% | 6.93% | 58.73% | 0.00% |
+| BalancedDPO + CM Repair | 51.00% | 58.50% | 15.31% | 64.32% | 0.00% |
+| SFT + CM Repair | 45.00% | 56.00% | 20.00% | 59.41% | 0.00% |
+| SFT+DPO + CM Repair | 46.50% | 56.00% | 17.76% | 61.90% | 0.00% |
 
 This early Spider 200 ablation was used for rapid iteration. In the final train1000 -> dev full clean-split setting, the cleaner SFT data and completion-only training no longer show the same first-turn regression; SFT+DPO achieves the best first-turn and final execution accuracy.
 
